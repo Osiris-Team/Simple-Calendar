@@ -200,6 +200,7 @@ class CalDAVHelper(val context: Context) {
             }
 
             val description = cursor.getStringValue(Events.DESCRIPTION) ?: ""
+            val tags = mutableListOf<Long>()
             val startTS = cursor.getLongValue(Events.DTSTART) / 1000L
             var endTS = cursor.getLongValue(Events.DTEND) / 1000L
             val allDay = cursor.getIntValue(Events.ALL_DAY)
@@ -226,7 +227,7 @@ class CalDAVHelper(val context: Context) {
             val source = "$CALDAV-$calendarId"
             val repeatRule = Parser().parseRepeatInterval(rrule, startTS)
             val event = Event(
-                null, startTS, endTS, title, location, description, reminder1?.minutes ?: REMINDER_OFF,
+                null, startTS, endTS, title, location, description, tags, reminder1?.minutes ?: REMINDER_OFF,
                 reminder2?.minutes ?: REMINDER_OFF, reminder3?.minutes ?: REMINDER_OFF,
                 reminder1?.type ?: REMINDER_NOTIFICATION, reminder2?.type ?: REMINDER_NOTIFICATION,
                 reminder3?.type ?: REMINDER_NOTIFICATION, repeatRule.repeatInterval, repeatRule.repeatRule,

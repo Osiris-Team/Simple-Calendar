@@ -88,11 +88,34 @@
                 android:textCursorDrawable="@null"
                 android:textSize="@dimen/day_text_size" />
 
+            <HorizontalScrollView
+                android:id="@+id/event_scroll_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/event_description"
+                android:layout_marginStart="@dimen/activity_margin"
+                android:layout_marginTop="@dimen/activity_margin"
+                android:layout_marginEnd="@dimen/activity_margin">
+
+                <LinearLayout
+                    android:id="@+id/event_tags_holder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/event_button_add_tag"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="+ Tag" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
             <ImageView
                 android:id="@+id/event_description_divider"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/divider_height"
-                android:layout_below="@+id/event_description"
+                android:layout_below="@+id/event_scroll_tags"
                 android:layout_marginTop="@dimen/activity_margin"
                 android:layout_marginBottom="@dimen/normal_margin"
                 android:background="@color/divider_grey"

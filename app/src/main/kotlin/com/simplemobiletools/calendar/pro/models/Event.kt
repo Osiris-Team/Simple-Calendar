@@ -1,13 +1,11 @@
 package com.simplemobiletools.calendar.pro.models
 
 import androidx.collection.LongSparseArray
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.simplemobiletools.calendar.pro.extensions.seconds
 import com.simplemobiletools.calendar.pro.helpers.*
 import com.simplemobiletools.commons.extensions.addBitIf
+import org.jetbrains.annotations.NotNull
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.io.Serializable
@@ -20,6 +18,7 @@ data class Event(
     @ColumnInfo(name = "title") var title: String = "",
     @ColumnInfo(name = "location") var location: String = "",
     @ColumnInfo(name = "description") var description: String = "",
+    @ColumnInfo(name = "tags") @field:TypeConverters(ListLongConverter::class) var tags: MutableList<Long> = mutableListOf(),
     @ColumnInfo(name = "reminder_1_minutes") var reminder1Minutes: Int = REMINDER_OFF,
     @ColumnInfo(name = "reminder_2_minutes") var reminder2Minutes: Int = REMINDER_OFF,
     @ColumnInfo(name = "reminder_3_minutes") var reminder3Minutes: Int = REMINDER_OFF,

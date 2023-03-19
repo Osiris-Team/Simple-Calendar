@@ -1,10 +1,13 @@
 package com.simplemobiletools.calendar.pro.activities
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
@@ -15,11 +18,11 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.Data
 import android.text.TextUtils
 import android.text.method.LinkMovementMethod
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.widget.ImageView
-import android.widget.RelativeLayout
+import android.widget.*
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.MaterialTimePicker.INPUT_MODE_CLOCK
 import com.google.android.material.timepicker.TimeFormat
@@ -38,13 +41,17 @@ import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.RadioItem
 import com.simplemobiletools.commons.views.MyAutoCompleteTextView
+import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.activity_event.*
 import kotlinx.android.synthetic.main.activity_event.view.*
 import kotlinx.android.synthetic.main.item_attendee.view.*
+import org.jetbrains.annotations.NotNull
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class EventActivity : SimpleActivity() {
     private val LAT_LON_PATTERN = "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?)([,;])\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)\$"
@@ -475,6 +482,7 @@ class EventActivity : SimpleActivity() {
         event_title.setText(mEvent.title)
         event_location.setText(mEvent.location)
         event_description.setText(mEvent.description)
+        setupTags();
 
         mReminder1Minutes = mEvent.reminder1Minutes
         mReminder2Minutes = mEvent.reminder2Minutes
@@ -543,8 +551,97 @@ class EventActivity : SimpleActivity() {
             }
             mEventEndDateTime = mEventStartDateTime.plusMinutes(addMinutes)
         }
+        setupTags();
         addDefValuesToNewEvent()
         checkAttendees()
+    }
+
+    private val mapButtonsToTags = SmartMap<Button, EventTag>()
+
+    private fun setupTags() {
+        event_button_add_tag.setOnClickListener{
+            showEventTagDialog(null)
+        }
+        ensureBackgroundThread {
+            for (eventTag in eventTagsDB.getAll()) {
+                runOnUiThread{
+                    val button = Button(this)
+                    button.text = eventTag.name
+
+                    var isEnabled = true;
+                    button.setBackgroundColor(Color.GREEN)
+                    val oldBackgroundColor = Color.GREEN
+                    for (enabledTagId in mEvent.tags) {
+                        if(enabledTagId == eventTag.id){
+                            button.setBackgroundColor(Color.TRANSPARENT)
+                            isEnabled = false
+                            break
+                        }
+                    }
+                    button.isLongClickable = true;
+                    button.setOnLongClickListener {
+                        showEventTagDialog(eventTag)
+                        true
+                    }
+
+                    button.setOnClickListener {
+                        // TODO should I also save/update the event in DB directly?
+                        if(isEnabled){
+                            mEvent.tags.add(eventTag.id!!)
+                            isEnabled = false
+                            button.setBackgroundColor(Color.TRANSPARENT)
+                        } else{
+                            mEvent.tags.remove(eventTag.id)
+                            isEnabled = true
+                            button.setBackgroundColor(oldBackgroundColor)
+                        }
+                    }
+
+                    event_tags_holder.addView(button);
+                    mapButtonsToTags.put(button, eventTag)
+                }
+            }
+        }
+    }
+
+    private fun showEventTagDialog(eventTag: EventTag?) {
+        hideKeyboard()
+
+        val builder = AlertDialog.Builder(this)
+        val editText = EditText(this)
+        if (eventTag != null) {
+            editText.setText(eventTag.name)
+        }
+        builder.apply {
+            setTitle("Tag Name")
+            setView(editText)
+            setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            setPositiveButton("Save") { _, _ ->
+                if (eventTag != null) {
+                    eventTag.name = editText.value
+                }
+                ensureBackgroundThread {
+                    if (eventTag != null) {
+                        if(eventTag.name.isEmpty()){
+                            eventTagsDB.delete(listOf(eventTag.id!!))
+                            // TODO also remove from UI
+                            // TODO probably better to add some kind of change listener to eventTag.name
+                        }
+                        else{
+                            eventTagsDB.insertOrUpdate(eventTag)
+                            // TODO also add to UI
+                        }
+                    } else{
+                        eventTagsDB.insertOrUpdate(EventTag(null, editText.value))
+                    }
+                }
+            }
+        }
+
+        val dialog = builder.create()
+        dialog.show()
     }
 
     private fun addDefValuesToNewEvent() {

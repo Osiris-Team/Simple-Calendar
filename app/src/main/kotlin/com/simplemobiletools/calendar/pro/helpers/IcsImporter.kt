@@ -237,6 +237,7 @@ class IcsImporter(val activity: SimpleActivity) {
                             curTitle,
                             curLocation,
                             curDescription,
+                            mutableListOf(),
                             reminders[0].minutes,
                             reminders[1].minutes,
                             reminders[2].minutes,

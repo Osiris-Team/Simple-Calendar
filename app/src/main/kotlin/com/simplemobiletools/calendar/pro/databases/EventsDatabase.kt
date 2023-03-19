@@ -11,24 +11,20 @@ import com.simplemobiletools.calendar.pro.R
 import com.simplemobiletools.calendar.pro.extensions.config
 import com.simplemobiletools.calendar.pro.helpers.Converters
 import com.simplemobiletools.calendar.pro.helpers.REGULAR_EVENT_TYPE_ID
-import com.simplemobiletools.calendar.pro.interfaces.EventTypesDao
-import com.simplemobiletools.calendar.pro.interfaces.EventsDao
-import com.simplemobiletools.calendar.pro.interfaces.TasksDao
-import com.simplemobiletools.calendar.pro.interfaces.WidgetsDao
-import com.simplemobiletools.calendar.pro.models.Event
-import com.simplemobiletools.calendar.pro.models.EventType
-import com.simplemobiletools.calendar.pro.models.Task
-import com.simplemobiletools.calendar.pro.models.Widget
+import com.simplemobiletools.calendar.pro.interfaces.*
+import com.simplemobiletools.calendar.pro.models.*
 import com.simplemobiletools.commons.extensions.getProperPrimaryColor
 import java.util.concurrent.Executors
 
-@Database(entities = [Event::class, EventType::class, Widget::class, Task::class], version = 8)
+@Database(entities = [Event::class, EventType::class, EventTag::class, Widget::class, Task::class], version = 8)
 @TypeConverters(Converters::class)
 abstract class EventsDatabase : RoomDatabase() {
 
     abstract fun EventsDao(): EventsDao
 
     abstract fun EventTypesDao(): EventTypesDao
+
+    abstract fun EventTagsDao(): EventTagsDao
 
     abstract fun WidgetsDao(): WidgetsDao
 
