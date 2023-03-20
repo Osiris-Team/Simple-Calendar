@@ -1,5 +1,5 @@
 ### My additions
-- Event tags. Small bits of information which can be easily added to each event, and
+- Event tags. Small, persistent, bits of information which can be easily added to each event, and
 are also shown in the week view. You can add multiple tags to an event. 
 In my case room number or name of the teacher giving the course. Its pretty annoying to have to enter the same room number and the teacher's name multiple times for each new event thus this would be really helpful.
 
