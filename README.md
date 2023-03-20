@@ -1,7 +1,9 @@
 ### My additions
 - Event tags. Small, persistent, bits of information which can be easily added to each event, and
 are also shown in the week view. You can add multiple tags to an event. 
-In my case room number or name of the teacher giving the course. Its pretty annoying to have to enter the same room number and the teacher's name multiple times for each new event thus this would be really helpful.
+In my case room number or name of the teacher giving the course. Its pretty annoying to have to enter the same room number and the teacher's name multiple times for each new event thus this is really helpful.
+You can create a new tag by pressing the "+ Tag" button, then click on your new tag to enable it for this event. To rename a tag press and hold
+the tag. To delete it also press and hold, delete the name and press "Save".
 
 # Simple Calendar
 <img alt="Logo" src="graphics/icon.png" width="120" />
