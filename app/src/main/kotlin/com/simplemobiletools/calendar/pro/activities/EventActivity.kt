@@ -7,7 +7,6 @@ import android.app.TimePickerDialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
@@ -18,11 +17,14 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.Data
 import android.text.TextUtils
 import android.text.method.LinkMovementMethod
-import android.util.Log
+import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import androidx.core.graphics.toColor
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.MaterialTimePicker.INPUT_MODE_CLOCK
 import com.google.android.material.timepicker.TimeFormat
@@ -41,17 +43,14 @@ import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.RadioItem
 import com.simplemobiletools.commons.views.MyAutoCompleteTextView
-import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.activity_event.*
 import kotlinx.android.synthetic.main.activity_event.view.*
 import kotlinx.android.synthetic.main.item_attendee.view.*
-import org.jetbrains.annotations.NotNull
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class EventActivity : SimpleActivity() {
     private val LAT_LON_PATTERN = "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?)([,;])\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)\$"
@@ -563,46 +562,57 @@ class EventActivity : SimpleActivity() {
             showEventTagDialog(null)
         }
         ensureBackgroundThread {
-            for (eventTag in eventTagsDB.getAll()) {
-                runOnUiThread{
-                    val button = Button(this)
-                    button.text = eventTag.name
-
-                    var isEnabled = true;
-                    button.setBackgroundColor(Color.GREEN)
-                    val oldBackgroundColor = Color.GREEN
-                    for (enabledTagId in mEvent.tags) {
-                        if(enabledTagId == eventTag.id){
-                            button.setBackgroundColor(Color.TRANSPARENT)
-                            isEnabled = false
-                            break
-                        }
-                    }
-                    button.isLongClickable = true;
-                    button.setOnLongClickListener {
-                        showEventTagDialog(eventTag)
-                        true
-                    }
-
-                    button.setOnClickListener {
-                        // TODO should I also save/update the event in DB directly?
-                        if(isEnabled){
-                            mEvent.tags.add(eventTag.id!!)
-                            isEnabled = false
-                            button.setBackgroundColor(Color.TRANSPARENT)
-                        } else{
-                            mEvent.tags.remove(eventTag.id)
-                            isEnabled = true
-                            button.setBackgroundColor(oldBackgroundColor)
-                        }
-                    }
-
-                    event_tags_holder.addView(button);
-                    mapButtonsToTags.put(button, eventTag)
-                }
+            for (eventTag in eventTagsDB.getAll()) { // Get globally saved tags
+                appendTagButton(eventTag)
             }
         }
     }
+
+    private fun appendTagButton(eventTag: EventTag) {
+        runOnUiThread{
+            // TODO find out how to clone already added "+ Tag" btn, or how to clone its style
+            //val button = Button(this, null, R.style.Widget_Material3_Button)
+            //val button = Button(this)
+            val button = Button(this, null, android.R.attr.buttonStyle)
+            button.text = eventTag.name
+
+            var isEnabled = false;
+            val enabledColor = R.color.colorPrimary!!
+            val disabledColor = (Color.TRANSPARENT);
+            button.setBackgroundColor(disabledColor)
+            for (enabledTagId in mEvent.tags) {
+                if(enabledTagId == eventTag.id){
+                    button.setBackgroundColor(enabledColor)
+                    isEnabled = true
+                    break
+                }
+            }
+            button.isLongClickable = true;
+            button.setOnLongClickListener {
+                showEventTagDialog(eventTag)
+                true
+            }
+
+            button.setOnClickListener {
+                if(isEnabled){
+                    isEnabled = false
+                    mEvent.tags.remove(eventTag.id);
+                    button.setBackgroundColor(disabledColor)
+                    //ensureBackgroundThread { eventTagsDB.delete(listOf(eventTag.id!!)) } // Do not delete from global tags
+                } else{
+                    isEnabled = true
+                    mEvent.tags.add(eventTag.id!!)
+                    button.setBackgroundColor(enabledColor)
+                }
+                if(mEvent.id != null) // Only update event tag in db if exists in db
+                    ensureBackgroundThread { eventsDB.insertOrUpdate(mEvent) }
+            }
+
+            event_tags_holder.addView(button);
+            mapButtonsToTags.put(button, eventTag)
+        }
+    }
+
 
     private fun showEventTagDialog(eventTag: EventTag?) {
         hideKeyboard()
@@ -626,15 +636,20 @@ class EventActivity : SimpleActivity() {
                     if (eventTag != null) {
                         if(eventTag.name.isEmpty()){
                             eventTagsDB.delete(listOf(eventTag.id!!))
-                            // TODO also remove from UI
-                            // TODO probably better to add some kind of change listener to eventTag.name
+                            // TODO also delete from each event tags list
+                            runOnUiThread {
+                                val btn = mapButtonsToTags.getByValue(eventTag)?.key;
+                                event_tags_holder.removeView(btn)
+                            }
                         }
                         else{
                             eventTagsDB.insertOrUpdate(eventTag)
-                            // TODO also add to UI
+                            runOnUiThread { appendTagButton(eventTag) }
                         }
                     } else{
-                        eventTagsDB.insertOrUpdate(EventTag(null, editText.value))
+                        val id = eventTagsDB.insertOrUpdate(EventTag(null, editText.value))
+                        val eventTag = EventTag(id, editText.value)
+                        runOnUiThread { appendTagButton(eventTag) }
                     }
                 }
             }

@@ -35,6 +35,7 @@ import kotlinx.android.synthetic.main.week_event_marker.view.*
 import org.joda.time.DateTime
 import org.joda.time.Days
 import java.util.*
+import java.util.concurrent.CountDownLatch
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -592,7 +593,7 @@ class WeekFragment : Fragment(), WeeklyCalendar {
                                 3
                             }
 
-                            text = event.title
+                            text = getFullEventTitle(event)
                             checkViewStrikeThrough(event.isTaskCompleted())
                             contentDescription = text
 
@@ -644,6 +645,21 @@ class WeekFragment : Fragment(), WeeklyCalendar {
 
         checkTopHolderHeight()
         addCurrentTimeIndicator()
+    }
+
+    private fun getFullEventTitle(event: Event): CharSequence? {
+        var txt = event.title + "\n"
+        val latch = CountDownLatch(1)
+        ensureBackgroundThread {
+            for (tagId in event.tags) {
+                val tag = context?.eventTagsDB?.getById(tagId)
+                if(tag != null) // If null Means it was deleted, but still in this events list
+                    txt += tag.name + " "
+            }
+            latch.countDown()
+        }
+        latch.await() // Block here until the latch count reaches zero
+        return txt
     }
 
     private fun addNewLine() {
@@ -728,7 +744,7 @@ class WeekFragment : Fragment(), WeeklyCalendar {
             week_event_label.apply {
                 setTextColor(textColor)
                 maxLines = if (event.isTask()) 1 else 2
-                text = event.title
+                text = getFullEventTitle(event)
                 checkViewStrikeThrough(event.isTaskCompleted())
                 contentDescription = text
             }
