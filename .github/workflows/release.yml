@@ -13,19 +13,23 @@ jobs:
               with:
                   distribution: temurin
                   java-version: "11"
+
             - name: Set execution flag for gradlew
               run: chmod +x gradlew
+
             - name: Build APK
               run: bash ./gradlew assembleDebug --stacktrace
+
+            - name: Show files.
+                  run: |
+                      echo Showing current directory:
+                      find ./app/build
+
             - name: Upload APK
               uses: actions/upload-artifact@v1
               with:
                   name: apk
                   path: app/build/outputs/apk/androidTest/core/debug/calendar-core-debug-androidTest.apk
-            - name: Show files.
-                run: |
-                    echo Showing current directory:
-                    find ./app/build
 
     release:
         name: Release APK
