@@ -23,9 +23,9 @@ jobs:
                   name: apk
                   path: app/build/outputs/apk/androidTest/core/debug/calendar-core-debug-androidTest.apk
             - name: Show files.
-                run: |
-                    echo Showing current directory:
-                    find ./app/build
+              run: |
+                echo Showing current directory:
+                find ./app/build
 
     release:
         name: Release APK
