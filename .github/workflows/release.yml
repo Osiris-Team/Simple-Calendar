@@ -1,8 +1,5 @@
 name: Build and Release
-on:
-    push:
-        branches:
-            - master
+on: [workflow_dispatch]
 
 jobs:
     apk:
@@ -25,6 +22,10 @@ jobs:
               with:
                   name: apk
                   path: app/build/outputs/apk/androidTest/core/debug/calendar-core-debug-androidTest.apk
+            - name: Show files.
+                run: |
+                    echo Showing current directory:
+                    find ./app/build
 
     release:
         name: Release APK
