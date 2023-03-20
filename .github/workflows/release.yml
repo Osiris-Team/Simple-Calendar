@@ -1,5 +1,6 @@
 name: Build and Release
 on: [workflow_dispatch]
+permissions: read-all|write-all
 
 jobs:
     apk:
@@ -35,7 +36,6 @@ jobs:
         name: Release APK
         needs: apk
         runs-on: ubuntu-latest
-        permissions: read-all|write-all
         steps:
             - name: Download APK from build
               uses: actions/download-artifact@v1
